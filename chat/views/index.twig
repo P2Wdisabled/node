@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>{{ title }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="/style.css" rel="stylesheet">
+</head>
+<body>
+  <main class="wrap">
+    <h1>{{ title }}</h1>
+
+    <section class="chat">
+      <ul id="messages" class="messages" aria-live="polite"></ul>
+
+      <form id="form" class="form" autocomplete="off">
+        <input id="input" class="input" type="text" placeholder="Tape ton message…" maxlength="1000" required />
+        <button class="send" type="submit">Envoyer</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
