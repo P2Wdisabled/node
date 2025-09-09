@@ -10,12 +10,21 @@
   <main class="wrap">
     <h1>{{ title }}</h1>
 
+    <!-- Formulaire pseudo -->
+    <section id="nick-section">
+      <form id="nick-form" autocomplete="off">
+        <input id="nick" type="text" maxlength="32" placeholder="Choisis un pseudo…" required>
+        <button type="submit">Entrer</button>
+      </form>
+      <p class="muted">Ton pseudo est temporaire (effacé si tu recharges la page).</p>
+    </section>
+
+    <!-- Zone chat -->
     <section class="chat">
       <ul id="messages" class="messages" aria-live="polite"></ul>
-
       <form id="form" class="form" autocomplete="off">
-        <input id="input" class="input" type="text" placeholder="Tape ton message…" maxlength="1000" required />
-        <button class="send" type="submit">Envoyer</button>
+        <input id="input" class="input" type="text" placeholder="Tape ton message…" maxlength="1000" required disabled>
+        <button class="send" type="submit" disabled>Envoyer</button>
       </form>
     </section>
   </main>
