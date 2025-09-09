@@ -1,7 +1,7 @@
-(() => {
+document.addEventListener("DOMContentLoaded", () => {
   const socket = io();
 
-  let name = null; // pas stocké → reset à chaque reload
+  let name = null;
 
   const $nickForm = document.getElementById("nick-form");
   const $nickInput = document.getElementById("nick");
@@ -12,9 +12,24 @@
   const $input = document.getElementById("input");
   const $sendBtn = $form.querySelector("button");
 
-  // verrous initiaux
-  $input.disabled = true;
-  $sendBtn.disabled = true;
+  // Lock initial
+  setChatLock(true);
+
+  // Logs utiles
+  socket.on("connect", () => console.log("🔗 socket:", socket.id));
+  socket.on("connect_error", (e) => console.error("⚠️ connect_error", e));
+  socket.on("disconnect", (r) => console.warn("🔌 disconnect", r));
+
+  // Historique au chargement
+  loadHistory(200).catch(() => {});
+
+  function setChatLock(locked) {
+    $input.disabled = locked;
+    $sendBtn.disabled = locked;
+    $input.placeholder = locked
+      ? "Choisis d’abord un pseudo au-dessus"
+      : "Tape ton message…";
+  }
 
   function scrollToBottom() {
     $messages.scrollTop = $messages.scrollHeight;
@@ -57,33 +72,60 @@
     scrollToBottom();
   }
 
-  // Choix pseudo
+  async function loadHistory(limit = 100) {
+    const res = await fetch(`/api/messages?limit=${limit}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const rows = await res.json();
+    for (const m of rows) addMessage(m.name, m.text, m.ts);
+  }
+
+  // Pseudo → join (avec ACK, pas de reload)
   $nickForm.addEventListener("submit", (e) => {
     e.preventDefault();
+    e.stopPropagation();
+
     const pseudo = ($nickInput.value || "").trim().slice(0, 32);
     if (!pseudo) return;
-    name = pseudo;
-    socket.emit("join", name);
-    addSystem(`Connecté en tant que ${name}`);
-    $nickSection.style.display = "none";
-    // déverrouille le chat
-    $input.disabled = false;
-    $sendBtn.disabled = false;
-    $input.focus();
+
+    const doJoin = () => {
+      socket.emit("join", pseudo, (resp) => {
+        if (!resp || !resp.ok) {
+          addSystem("Connexion refusée. Réessaie.");
+          return;
+        }
+        name = resp.name || pseudo;
+        addSystem(`Connecté en tant que ${name}`);
+        $nickSection.style.display = "none";
+        setChatLock(false);
+        $input.focus();
+      });
+    };
+
+    if (socket.connected) doJoin();
+    else socket.once("connect", doJoin);
   });
 
   // Envoi message
   $form.addEventListener("submit", (e) => {
     e.preventDefault();
-    if (!name) return;
+    e.stopPropagation();
+
+    if (!name) {
+      addSystem("Choisis un pseudo avant d’envoyer des messages.");
+      return;
+    }
+
     const text = $input.value.trim();
     if (!text) return;
+
     socket.emit("chat", text);
     $input.value = "";
     $input.focus();
   });
 
-  // Réception
+  // Réception live
   socket.on("system", (text) => addSystem(text));
   socket.on("chat", (msg) => addMessage(msg.name, msg.text, msg.ts));
-})();
+});
