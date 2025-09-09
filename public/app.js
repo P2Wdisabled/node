@@ -1,24 +1,23 @@
-/* public/app.js */
 (() => {
   const socket = io();
 
-  // Pseudo (prompt obligatoire au premier accès)
-  let name = localStorage.getItem("nick");
-  while (!name || !name.trim()) {
-    name = prompt("Choisis un pseudo :") || "";
-    if (name === null) name = "";
-  }
-  name = name.trim().slice(0, 32);
-  localStorage.setItem("nick", name);
-  socket.emit("join", name);
+  let name = null; // pas stocké → reset à chaque reload
 
-  // DOM
+  const $nickForm = document.getElementById("nick-form");
+  const $nickInput = document.getElementById("nick");
+  const $nickSection = document.getElementById("nick-section");
+
   const $messages = document.getElementById("messages");
   const $form = document.getElementById("form");
   const $input = document.getElementById("input");
+  const $sendBtn = $form.querySelector("button");
+
+  // verrous initiaux
+  $input.disabled = true;
+  $sendBtn.disabled = true;
 
   function scrollToBottom() {
-    $messages.parentElement.scrollTop = $messages.parentElement.scrollHeight;
+    $messages.scrollTop = $messages.scrollHeight;
   }
 
   function addSystem(text) {
@@ -58,9 +57,25 @@
     scrollToBottom();
   }
 
-  // Envoi
+  // Choix pseudo
+  $nickForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const pseudo = ($nickInput.value || "").trim().slice(0, 32);
+    if (!pseudo) return;
+    name = pseudo;
+    socket.emit("join", name);
+    addSystem(`Connecté en tant que ${name}`);
+    $nickSection.style.display = "none";
+    // déverrouille le chat
+    $input.disabled = false;
+    $sendBtn.disabled = false;
+    $input.focus();
+  });
+
+  // Envoi message
   $form.addEventListener("submit", (e) => {
     e.preventDefault();
+    if (!name) return;
     const text = $input.value.trim();
     if (!text) return;
     socket.emit("chat", text);
