@@ -1,32 +1,11 @@
 import "dotenv/config";
-import express from "express";
 import http from "http";
 import { Server as SocketIOServer } from "socket.io";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { dirname } from "node:path";
 import { prisma } from "./utils/prisma.js";
+import app from "./app.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const app = express();
 const server = http.createServer(app);
 const io = new SocketIOServer(server, { cors: { origin: "*" } });
-
-// Static
-app.use(express.static(path.join(__dirname, "public")));
-
-// Twig (dossier 'views')
-app.set("views", path.join(__dirname, "views"));
-app.set("view engine", "twig");
-import twig from "twig";
-app.engine("twig", twig.__express);
-
-// Page
-app.get("/", (req, res) => {
-  res.render("index", { title: "Chat Anonyme" });
-});
 
 // Historique (REST)
 app.get("/api/messages", async (req, res) => {
@@ -74,7 +53,7 @@ io.on("connection", (socket) => {
       io.emit("chat", { name, text, ts: saved.ts.toISOString() });
     } catch (e) {
       console.error("chat save fail:", e);
-      socket.emit("system", "Échec d’enregistrement du message.");
+      socket.emit("system", "Échec d'enregistrement du message.");
     }
   });
 
