@@ -7,8 +7,14 @@
   "scripts": {
     "start": "node server.js",
     "test": "jest",
+    "test:unit": "jest tests/routes.test.js tests/api.test.js",
+    "test:integration": "jest tests/socket.test.js",
+    "test:e2e": "playwright test",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e",
+    "playwright:install": "playwright install",
+    "playwright:report": "playwright show-report",
     "prisma:init:sqlite": "prisma init --datasource-provider sqlite",
     "prisma:migrate": "prisma migrate dev",
     "prisma:generate": "prisma generate",
@@ -26,6 +32,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.28.4",
+    "@babel/plugin-transform-modules-commonjs": "^7.27.1",
     "@babel/preset-env": "^7.28.3",
     "@playwright/test": "^1.55.0",
     "babel-jest": "^30.1.2",
